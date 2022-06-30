@@ -13,7 +13,7 @@ type Customer struct {
 	IsMember         string `gorm:"default:no"`
 	UserCredentialID uint
 	UserCredential   UserCredential
-	Products         []*Product `gorm:"many2many:customer_product"`
+	Products         []*Product `gorm:"many2many:customer_with_products"`
 	BaseModel        BaseModel  `gorm:"embedded"`
 }
 

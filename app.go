@@ -1,9 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"gorm/config"
 	"gorm/repository"
 	"gorm/usecase"
+	"gorm/utils"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -184,7 +186,7 @@ func main() {
 	// fmt.Println(customer.ToString())
 
 	//tugas 1 login
-	custRepo := repository.NewCustomerRepository(db)
+	//custRepo := repository.NewCustomerRepository(db)
 	//userCredRepo := repository.NewUserCredsRepository(db)
 
 	//loginUscs := usecase.NewAuthenticationUsecase(custRepo, userCredRepo)
@@ -195,8 +197,8 @@ func main() {
 	// memberActUscs.MemberActivation("2e245d7e-4f1c-46ef-abe2-f8ae6a477b01")
 
 	//tugas 3
-	saldoUscs := usecase.NewCustomerBalanceUsecase(custRepo)
-	saldoUscs.BalanceProcessing("2e245d7e-4f1c-46ef-abe2-f8ae6a477b01", "+", 10000)
+	//saldoUscs := usecase.NewCustomerBalanceUsecase(custRepo)
+	//saldoUscs.BalanceProcessing("2e245d7e-4f1c-46ef-abe2-f8ae6a477b01", "+", 10000)
 
 	//create Product
 	// product01 := model.Product{
@@ -230,10 +232,152 @@ func main() {
 	// err = customerRepo.Create(&customer01)
 	// utils.IsError(err)
 
+	//case 1 -> Insert Cust baru sekalian Product
+	// passHash, _ := HashPassword("pass")
+	// customer01 := model.Customer{
+	// 	Id:   utils.GenerateId(),
+	// 	Name: "Orang Miskin",
+	// 	Address: []model.Address{
+	// 		{
+	// 			StreetName: "Jl Suka Suka",
+	// 			City:       "Sukabumi",
+	// 			PostalCode: "456721",
+	// 		},
+	// 	},
+	// 	Phone:   "6666312312",
+	// 	Email:   "perlu.duitg@gmail.com",
+	// 	Balance: 0,
+	// 	UserCredential: model.UserCredential{
+	// 		UserName: "oragnmiskin",
+	// 		Password: passHash},
+	// Products: []*model.Product{
+	// 	{
+	// 		ProductName: "Caca Marica",
+	// 	},
+	// 	{
+	// 		ProductName: "Beng Beng",
+	// 	},
+	// },
+	// }
 	// customerRepo := repository.NewCustomerRepository(db)
-	// err := customerRepo.OpenProductForExistingCustomer(&model.Customer{
-	// 	Products: []*model.Product{},
-	// })
+	// err := customerRepo.Create(&customer01)
+	// utils.IsError(err)
+
+	//case 2 ->  menambahkan produk baru ke cust yg sudah terdaftar
+	// customerRepo := repository.NewCustomerRepository(db)
+	// cust, err := customerRepo.FindById("a6f27fd9-9b8d-4f93-aca0-e7cb86dd8f4a")
+	// utils.IsError(err)
+	// cust.Products = []*model.Product{
+	// 	{
+	// 		ProductName: "Yakult",
+	// 	},
+	// 	// {
+	// 	// 	ProductName: "Ale-ale",
+	// 	// },
+	// 	// {
+	// 	// 	ProductName: "Chocolatos",
+	// 	// },
+	// }
+	// err = customerRepo.UpdateByModel(&cust)
+	// utils.IsError(err)
+
+	//case 3 -> Cust baru dengan item yg sudah exist
+	// prdRepo := repository.NewProductRepository(db)
+	// prod, err := prdRepo.FindById(7)
+	// utils.IsError(err)
+	// fmt.Println(prod)
+	// pass, _ := HashPassword("password")
+	// customer01 := model.Customer{
+	// 	Id:   utils.GenerateId(),
+	// 	Name: "Tes Joni",
+	// 	Address: []model.Address{
+	// 		{
+	// 			StreetName: "Jl Dulu Aja",
+	// 			City:       "Bandung",
+	// 			PostalCode: "15422",
+	// 		},
+	// 	},
+	// 	Phone:   "12329976",
+	// 	Email:   "jonites@gmail.com",
+	// 	Balance: 15000,
+	// 	UserCredential: model.UserCredential{
+	// 		UserName: "jontes",
+	// 		Password: pass,
+	// 	},
+	// 	Products: []*model.Product{
+	// 		&prod,
+	// 	},
+	// }
+	// cstRepo := repository.NewCustomerRepository(db)
+	// err = cstRepo.Create(&customer01)
+	// utils.IsError(err)
+
+	//case 4 -> cust exist mengambil data prod exist
+	// //prod exist
+	// prdRepo := repository.NewProductRepository(db)
+	// prod, err := prdRepo.FindById(8)
+	// utils.IsError(err)
+	// //cust exist
+	// cstRepo := repository.NewCustomerRepository(db)
+	// cust, err := cstRepo.FindById("0e305546-5efc-4aac-be98-4cba4dd9580b")
+	// utils.IsError(err)
+	// //append then update
+	// cust.Products = append(cust.Products, &prod)
+	// err = cstRepo.UpdateByModel(&cust)
+	// utils.IsError(err)
+
+	//case exist customer ingin menghapus relasinya, tapi tidak menghapus product di mst_product
+	// prdRepo := repository.NewProductRepository(db)
+	// cstRepo := repository.NewCustomerRepository(db)
+	// cust, err := cstRepo.FindById("0e305546-5efc-4aac-be98-4cba4dd9580b")
+	// utils.IsError(err)
+	// prod, err := prdRepo.FindById(8)
+	// utils.IsError(err)
+	// err = cstRepo.DeleteAssociation(&cust, "Products", &prod)
+	// utils.IsError(err)
+
+	//case exist customer ingin mengupdate product relasinya
+	// prdRepo := repository.NewProductRepository(db)
+	// cstRepo := repository.NewCustomerRepository(db)
+	// cust, err := cstRepo.FindByIdWithPreload(map[string]interface{}{"id": "0e305546-5efc-4aac-be98-4cba4dd9580b"}, "Products")
+	// utils.IsError(err)
+	// newProd, err := prdRepo.FindById(8)
+	// utils.IsError(err)
+	// var oldProduct uint = 7
+	// var newProductSlice []model.Product
+	// for _, prod := range cust.Products {
+	// 	if (prod).ID != oldProduct {
+	// 		newProductSlice = append(newProductSlice, *prod)
+	// 	}
+	// }
+	// newProductSlice = append(newProductSlice, newProd)
+	// err = cstRepo.UpdateAssociation(&cust, "Products", newProductSlice)
+	// utils.IsError(err)
+
+	//Latihan II tugas 1
+	// cstRepo := repository.NewCustomerRepository(db)
+	// totalProdPerCust := usecase.NewProductPerCustomer(cstRepo)
+	// result, err := totalProdPerCust.CountProductPerCustomer("0e305546-5efc-4aac-be98-4cba4dd9580b")
+	// utils.IsError(err)
+	// fmt.Println("Total Produk : ", result)
+
+	//Latihan II tugas 2
+	// cstRepo := repository.NewCustomerRepository(db)
+	// uscsProdlesCust := usecase.NewProdlessCust(cstRepo)
+	// result, err := uscsProdlesCust.FindProdlesCust()
+	// utils.IsError(err)
+	// fmt.Println("Productless Customers: ")
+	// for _, v := range result {
+	// 	fmt.Println(v.Id, " ", v.Name)
+	// }
+
+	//Latihan II tugas 3
+	cstRepo := repository.NewCustomerRepository(db)
+	uscsProdBuyerList := usecase.NewProductBuyerList(cstRepo)
+	result, err := uscsProdBuyerList.FindProductBuyerList()
+	utils.IsError(err)
+	fmt.Println(result)
+
 }
 
 func HashPassword(password string) (string, error) {

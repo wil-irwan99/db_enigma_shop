@@ -14,11 +14,16 @@ type CustomerRepository interface {
 	UpdateBy(existingCustomer *model.Customer) error
 	Delete(customer *model.Customer) error
 	FindById(id string) (model.Customer, error)
-	FindFirstBy(by map[string]interface{}) (model.Customer, error)                         //where column = ? limit 1
-	FindAllBy(by map[string]interface{}) ([]model.Customer, error)                         //where column = ?
+	FindFirstBy(by map[string]interface{}) (model.Customer, error) //where column = ? limit 1
+	FindAllBy(by map[string]interface{}) ([]model.Customer, error) //where column = ?
+	FindAll() ([]model.Customer, error)
 	FindBy(by string, vals ...interface{}) ([]model.Customer, error)                       // where column like ?
 	FindByIdWithPreload(by map[string]interface{}, preload string) (model.Customer, error) //Find First
-	OpenProductForExistingCustomer(customerWithProduct *model.Customer) error
+	FindAllWithPreload(preload string) ([]model.Customer, error)
+	UpdateByModel(payload *model.Customer) error
+	DeleteAssociation(assocModel *model.Customer, assocName string, assocDelValue interface{}) error
+	UpdateAssociation(assocModel *model.Customer, assocName string, assocNewValue interface{}) error
+	CountAssociation(assocModel *model.Customer, assocName string) int
 	BaseRepositoryAggregation
 	BaseRepositoryPagging
 }
@@ -27,9 +32,42 @@ type customerRepository struct {
 	db *gorm.DB
 }
 
-// OpenProductForExistingCustomer implements CustomerRepository
-func (c *customerRepository) OpenProductForExistingCustomer(customerWithProduct *model.Customer) error {
-	result := c.db.Model(&customerWithProduct).Updates(customerWithProduct).Error
+func (c *customerRepository) FindAllWithPreload(preload string) ([]model.Customer, error) {
+	var customer []model.Customer
+	result := c.db.Preload(preload).Find(&customer)
+	if err := result.Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return customer, nil
+		} else {
+			return customer, err
+		}
+	}
+	return customer, nil
+}
+
+func (c *customerRepository) CountAssociation(assocModel *model.Customer, assocName string) int {
+	result := c.db.Model(assocModel).Association(assocName).Count()
+	return int(result)
+}
+
+func (c *customerRepository) UpdateAssociation(assocModel *model.Customer, assocName string, assocNewValue interface{}) error {
+	err := c.db.Model(assocModel).Association(assocName).Replace(assocNewValue)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *customerRepository) DeleteAssociation(assocModel *model.Customer, assocName string, assocDelValue interface{}) error {
+	err := c.db.Model(assocModel).Association(assocName).Delete(assocDelValue)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *customerRepository) UpdateByModel(payload *model.Customer) error {
+	result := c.db.Model(&payload).Updates(payload).Error //updates bisa untuk struct atau map[string]interface
 	return result
 }
 
@@ -47,7 +85,7 @@ func (c *customerRepository) FindByIdWithPreload(by map[string]interface{}, prel
 }
 
 func (c *customerRepository) UpdateBy(existingCustomer *model.Customer) error {
-	result := c.db.Session(&gorm.Session{FullSaveAssociations: true}).Save(existingCustomer).Error
+	result := c.db.Session(&gorm.Session{FullSaveAssociations: true}).Save(existingCustomer).Error //hanya untuk struct
 	return result
 }
 
@@ -143,6 +181,19 @@ func (c *customerRepository) FindFirstBy(by map[string]interface{}) (model.Custo
 func (c *customerRepository) FindAllBy(by map[string]interface{}) ([]model.Customer, error) {
 	var customer []model.Customer
 	result := c.db.Unscoped().Where(by).Find(&customer) //Unscoped untuk cetak data termasuk deleted (soft delete)
+	if err := result.Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return customer, nil
+		} else {
+			return customer, err
+		}
+	}
+	return customer, nil
+}
+
+func (c *customerRepository) FindAll() ([]model.Customer, error) {
+	var customer []model.Customer
+	result := c.db.Find(&customer)
 	if err := result.Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return customer, nil
